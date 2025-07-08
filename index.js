@@ -1,32 +1,39 @@
-require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+require("dotenv").config();
 
 const app = express();
 
-app.use(cors());
+// ✅ Fix CORS properly
+app.use(cors({ origin: true }));
 app.use(express.json());
 
+// health check
 app.get("/", (req, res) => {
-  res.send("Stripe backend is running ✅");
+  res.send("Stripe server live");
 });
 
 app.post("/payments/create", async (req, res) => {
   const total = req.query.total;
-  console.log("💰 Payment Request Received >>>", total);
+  console.log("💰 Payment Request Received: ", total);
 
-  const paymentIntent = await stripe.paymentIntents.create({
-    amount: total,
-    currency: "usd",
-  });
+  try {
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: total,
+      currency: "inr",
+    });
 
-  res.status(201).send({
-    clientSecret: paymentIntent.client_secret,
-  });
+    res.status(201).send({
+      clientSecret: paymentIntent.client_secret,
+    });
+  } catch (error) {
+    console.error("Payment error:", error);
+    res.status(500).send({ error: error.message });
+  }
 });
 
-const port = process.env.PORT || 5000;
-app.listen(port, () => {
-  console.log(`✅ Server running on port ${port}`);
+const PORT = process.env.PORT || 5001;
+app.listen(PORT, () => {
+  console.log(`🟢 Server running on port ${PORT}`);
 });
