@@ -1,19 +1,24 @@
-const express = require("express");
-const cors = require("cors");
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
-require("dotenv").config();
+// index.js
+import dotenv from "dotenv";
+dotenv.config();
+
+import express from "express";
+import cors from "cors";
+import Stripe from "stripe";
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 const app = express();
 
-// ✅ Fix CORS properly
 app.use(cors({ origin: true }));
 app.use(express.json());
 
-// health check
+// Health check route
 app.get("/", (req, res) => {
   res.send("Stripe server live");
 });
 
+// Create PaymentIntent route
 app.post("/payments/create", async (req, res) => {
   const total = req.query.total;
   console.log("💰 Payment Request Received: ", total);
@@ -33,6 +38,7 @@ app.post("/payments/create", async (req, res) => {
   }
 });
 
+// Start the server
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
   console.log(`🟢 Server running on port ${PORT}`);
